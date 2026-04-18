@@ -1,0 +1,33 @@
+version: 1
+
+sources:
+    - name: source
+      database: awsdatacatalog
+      schema: f1dev
+      tables:
+        - name: circuits
+          description: "Circuits - auto-discovered by glue crawler"
+        - name: constructor_results
+          description: "Constructor Results - auto-discoverd by glue crawler"
+        - name: constructor_standings
+          description: "Constructor Standing - auto-discoverd by glue crawler"
+        - name: constructors
+          description: "Constructor - auto-discovery by glue crawler"
+        - name: driver_standings
+          description: "Driver Standings - auto-discoverd by glue crawler"
+        - name: drivers
+          description: "Drivers - auto-discoverd by glue crawler"
+        - name: lap_times
+          description: "Lap Times - auto-discovered by glue crawler"
+        - name: pit_stops
+          descrition: "Pit Stops - auto-discovered by glue crawler"
+        - name: qualifying
+          description: "Qualifying - auto-discovered by glue crawler"
+        - name: races
+          description: "Races - auto-discovered by glue crawler"
+        - name: results
+          description: "Results - auto-discovered by glue crawler"
+        - name: seasons
+          description: "Seasons - auto-discovered by glue crawler"
+        - name: sprint_results
+          description: "Sprint results - auto-discovered by glue crawler"

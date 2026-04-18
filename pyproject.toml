@@ -1,0 +1,12 @@
+[project]
+name = "dbt-athena-f1"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.42.89",
+    "botocore[crt]>=1.42.89",
+    "dbt-athena>=1.10.0",
+    "dbt-core>=1.11.8",
+]
