@@ -34,7 +34,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 seeds:
   f1_athena:
     +schema: seeds
-    +location: "s3://{{ env_var('S3_BUCKET') }}/data/seeds/"
+    +location: "s3://{{ env_var('S3_BUCKET', 'default-bucket') }}/data/seeds/"
 
 models:
   f1_athena:
@@ -42,12 +42,12 @@ models:
     bronze:
       +materialized: table
       +schema: bronze
-      +location: "s3://{{ env_var('S3_BUCKET') }}/data/bronze/"
+      +location: "s3://{{ env_var('S3_BUCKET', 'default-bucket') }}/data/bronze/"
     silver:
       +materialized: table
       +schema: silver
-      +location: "s3://{{ env_var('S3_BUCKET') }}/data/silver/"
+      +location: "s3://{{ env_var('S3_BUCKET', 'default-bucket') }}/data/silver/"
     gold:
       +materialized: table
       +schema: gold
-      +location: "s3://{{ env_var('S3_BUCKET') }}/data/gold/"
+      +location: "s3://{{ env_var('S3_BUCKET', 'default-bucket') }}/data/gold/"
