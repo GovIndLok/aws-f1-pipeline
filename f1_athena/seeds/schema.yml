@@ -1,0 +1,76 @@
+version: 1
+
+seeds:
+  - name: seed_constructor_lineage
+    description: >
+      F1 team lineage reference data. Defines rebrands (same entry, new name — stats combined
+      under one team_lineage_id) and successions (new legal entity acquires an entry —
+      separate team_lineage_id linked via predecessor_lineage_id).
+
+    config:
+      column_types:
+        lineage_sequence: integer
+        rebrand_year_start: integer
+        rebrand_year_end: integer
+
+    columns:
+      - name: constructor_ref
+        description: >
+          Constructor reference key from the bronze layer (e.g. toro_rosso, alphatauri).
+          NOTE: 'sauber' appears twice — once for the original team (1993–2005) and once
+          for the post-BMW era (2010–2018). The unique test is intentionally omitted here.
+
+      - name: team_lineage_id
+        description: >
+          Groups teams that are the same entity under different names (rebrands share an ID).
+          Succession teams receive a new lineage_id and link back via predecessor_lineage_id.
+        tests:
+          - not_null
+
+      - name: root_team_name
+        description: "Display name representing the original team identity for the lineage group."
+        tests:
+          - not_null
+
+      - name: lineage_sequence
+        description: "Position within the lineage (1 = original name, 2 = first rebrand, etc.)."
+        tests:
+          - not_null
+
+      - name: rebrand_year_start
+        description: "First season the constructor raced under this name."
+        tests:
+          - not_null
+
+      - name: rebrand_year_end
+        description: "Last season the constructor raced under this name. NULL means currently active."
+
+      - name: predecessor_lineage_id
+        description: >
+          For succession teams only: the team_lineage_id of the entry they acquired.
+          NULL for rebrands and original teams.
+
+      - name: succession_type
+        description: "How the succession occurred. NULL for rebrands within the same lineage."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['buyout', 'team_purchase', 'license_transfer']
+              config:
+                where: "succession_type IS NOT NULL"
+
+      - name: rebrand_notes
+        description: "Human-readable explanation of the team name change or succession event."
+
+  - name: status
+    description: "Unique identifier for each status."
+    columns:
+      - name: statusId
+        description: "Unique identifier for each status."
+        tests:
+          - not_null
+          - unique
+      - name: status
+        description: "Status of the race."
+        tests:
+          - not_null

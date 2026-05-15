@@ -1,0 +1,217 @@
+version: 1
+
+models:
+    - name: mart_constructors_season_stats
+      description: "Data mart for stat of constructor over a f1 season"
+      tests:
+        - dbt_utils.unique_combination_of_columns:
+            arguments:
+              combination_of_columns:
+                  - constructorId
+                  - year
+            config:
+              severity: error
+      columns:
+        - name: constructorId 
+          description: "Unique identifer for constructor associated in the mart"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+        - name: constructorName
+          description: "Name of the constructor assocaited in the mart"
+        - name: teamLineageId
+          description: "Unique lineage id of the constructor associated in the mart"
+        - name: constructorNationality
+          description: "Nationality of the constructor/ country the constructor is based from"
+        - name: year
+          description: "Year / Season of the stats of the constructor"
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: totalRaces
+          description: "Total races participated by constructor. (atleast one driver / car participated in the race)"
+          tests:
+           - dbt_utils.accepted_range:
+               arguments:
+                 min_value: 1   ## Minimum num of events to recognize the sesaon as worldChanpionship is 8 from 2021
+                 inclusive: true
+               config:
+                 severity: warn
+        - name: totalPoints
+          description: "Total points scored by the constructor over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                config:
+                  severity: warn
+        - name: totalWins
+          description: "Total wins (p1 finish) by both driver over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: "totalRaces"
+                config:
+                  severity: warn
+        - name: totalPodiums
+          description: "Total podiums (top 3 finish) by both the drivers over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: "totalRaces"
+                config:
+                  severity: warn
+        - name: finishRate
+          description: "Percentage of races finished (indicated by status_id 1) by the constructor over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: 1
+                config:
+                  severity: warn
+        - name: bestFinish
+          description: "Best finish order for the constructor over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 1 
+                  inclusive: true
+                config:
+                  severity: warn
+    
+    - name: mart_drivers_season_stats
+      description: "Data mart for stats of driver over a f1 season"
+      tests:
+        - dbt_utils.unique_combination_of_columns:
+            arguments:
+              combination_of_columns:
+                  - driverId
+                  - year
+            config:
+              severity: error
+      columns:
+        - name: driverId
+          description: "Unique identifier for driver in the data mart"
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverRef
+          description: "Short referance string for the driver"
+        - name: forename
+          description: "Driver's first name"
+        - name: surname
+          description: "Driver's surname"
+        - name: nationality
+          description: "Driver's nationality"
+        - name: currentNumber
+          description: "Current driver number"
+        - name: year
+          description: "Year / Season of the stats of the drivers"
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: totalRaces
+          description: "Total races driver participated in over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 1
+                  inclusive: true
+                config:
+                  severity: error
+        - name: totalPoints
+          description: "total_points earned over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                config:
+                  severity: error
+        - name: avgStartPosition
+          description: "Average posistion to start a race by driver"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 1
+                  inclusive: true
+                config:
+                  severity: error
+        - name: avgFinishOrder
+          description: "Average position to finish the race by the driver"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 1
+                  inclusive: true
+                config:
+                  severity: error
+        - name: avgPoints
+          description: "Average points score over a race"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                config:
+                  severity: error
+        - name: totalPodium
+          description: "Total podium (top 3 finish) by drive over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: "totalRaces"
+                config:
+                  severity: error
+        - name: totalP1Starts
+          description: "Total race starts from p1 position"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: "totalRaces"
+                config:
+                  severity: error
+        - name: finishRate
+          description: "Percentage of races finished (indicated by status_id 1) by the driver over the season"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: 1
+                config:
+                  severity: error
+        - name: avgQualifyingPosition
+          description: "Average qualifying position at the end of qualifying session (Note: may not be race's start position)"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 1
+                  inclusive: true
+                config:
+                  severity: error
+        - name: totalQ3Apperance
+          description: "Total number of time driver qualified for q3 session of qualifying"
+          tests:
+            - dbt_utils.accepted_range:
+                arguments:
+                  min_value: 0
+                  inclusive: true
+                  max_value: "totalRaces"
+                config:
+                  severity: error

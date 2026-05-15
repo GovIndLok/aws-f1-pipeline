@@ -68,3 +68,59 @@ Runtime Error
 [0m19:33:48.679211 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x710163179a70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x71016319cdd0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x710163259e10>]}
 [0m19:33:48.679546 [debug] [MainThread]: Flushing usage events
 [0m19:33:50.427518 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m17:28:13.463843 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f0bd17f5a90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f0bd355c190>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f0bd0ecf250>]}
+
+
+============================== 17:28:13.468178 | e25874de-8cc5-4746-a3d3-5d395301ece5 ==============================
+[0m17:28:13.468178 [info ] [MainThread]: Running with dbt=1.11.8
+[0m17:28:13.468679 [debug] [MainThread]: running dbt with arguments {'log_format': 'default', 'warn_error': 'None', 'invocation_command': 'dbt debug', 'use_colors': 'True', 'printer_width': '80', 'cache_selected_only': 'False', 'debug': 'False', 'log_path': 'logs', 'log_cache_events': 'False', 'quiet': 'False', 'use_experimental_parser': 'False', 'introspect': 'True', 'empty': 'None', 'write_json': 'True', 'static_parser': 'True', 'partial_parse': 'True', 'target_path': 'None', 'fail_fast': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'no_print': 'None', 'version_check': 'True', 'send_anonymous_usage_stats': 'True', 'indirect_selection': 'eager', 'profiles_dir': '/home/gov03/.dbt'}
+[0m17:28:13.487202 [info ] [MainThread]: dbt version: 1.11.8
+[0m17:28:13.487722 [info ] [MainThread]: python version: 3.13.12
+[0m17:28:13.488032 [info ] [MainThread]: python path: /home/gov03/test/dbt_athena_f1/.venv/bin/python
+[0m17:28:13.488289 [info ] [MainThread]: os info: Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.41
+[0m17:28:13.492539 [info ] [MainThread]: Error importing adapter: No module named 'dbt.adapters.databricks'
+[0m17:28:13.886920 [info ] [MainThread]: Using profiles dir at /home/gov03/.dbt
+[0m17:28:13.887384 [info ] [MainThread]: Using profiles.yml file at /home/gov03/.dbt/profiles.yml
+[0m17:28:13.887713 [info ] [MainThread]: Using dbt_project.yml file at /home/gov03/test/dbt_athena_f1/dbt_project.yml
+[0m17:28:13.888037 [info ] [MainThread]: Configuration:
+[0m17:28:13.888288 [info ] [MainThread]:   profiles.yml file [[31mERROR invalid[0m]
+[0m17:28:13.888522 [info ] [MainThread]:   dbt_project.yml file [[31mERROR not found[0m]
+[0m17:28:13.888758 [info ] [MainThread]: Required dependencies:
+[0m17:28:13.889017 [debug] [MainThread]: Executing "git --help"
+[0m17:28:13.890699 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Set `HEAD` or the index to a known state\n   switch     Switch branches\n   tag        Create, list, delete or verify tags\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m17:28:13.891082 [debug] [MainThread]: STDERR: "b''"
+[0m17:28:13.891299 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m17:28:13.891558 [info ] [MainThread]: Connection test skipped since no profile was found
+[0m17:28:13.891846 [info ] [MainThread]: [31m2 checks failed:[0m
+[0m17:28:13.892173 [info ] [MainThread]: Could not load dbt_project.yml
+Profile loading failed for the following reason:
+Runtime Error
+  Credentials in profile "dbt_tutorial", target "dev" invalid: Runtime Error
+    Could not find adapter type databricks!
+
+
+[0m17:28:13.892435 [info ] [MainThread]: Project loading failed for the following reason:
+ project path </home/gov03/test/dbt_athena_f1/dbt_project.yml> not found
+
+[0m17:28:13.893892 [debug] [MainThread]: Resource report: {"command_name": "debug", "command_success": false, "command_wall_clock_time": 0.47430867, "process_in_blocks": "65808", "process_kernel_time": 0.261196, "process_mem_max_rss": "131080", "process_out_blocks": "16", "process_user_time": 1.297821}
+[0m17:28:13.894353 [debug] [MainThread]: Command `dbt debug` failed at 17:28:13.894262 after 0.47 seconds
+[0m17:28:13.894696 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f0bcef91a70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f0bcefb4dd0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f0bcf071e10>]}
+[0m17:28:13.895045 [debug] [MainThread]: Flushing usage events
+[0m17:28:15.145995 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:06:52.109204 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7a5cde4e9940>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7a5ce0188190>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7a5cddbbf250>]}
+
+
+============================== 19:06:52.114471 | 55ec7994-ec22-4a43-aad8-34d6735737dc ==============================
+[0m19:06:52.114471 [info ] [MainThread]: Running with dbt=1.11.8
+[0m19:06:52.115224 [debug] [MainThread]: running dbt with arguments {'partial_parse': 'True', 'write_json': 'True', 'use_experimental_parser': 'False', 'version_check': 'True', 'printer_width': '80', 'fail_fast': 'False', 'debug': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'static_parser': 'True', 'cache_selected_only': 'False', 'log_cache_events': 'False', 'send_anonymous_usage_stats': 'True', 'log_path': 'logs', 'profiles_dir': '/home/gov03/.dbt', 'log_format': 'default', 'quiet': 'False', 'invocation_command': 'dbt compile --select gold', 'warn_error': 'None', 'introspect': 'True', 'no_print': 'None', 'empty': 'False', 'use_colors': 'True', 'indirect_selection': 'eager', 'target_path': 'None'}
+[0m19:06:52.115848 [error] [MainThread]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path /home/gov03/test/dbt_athena_f1/dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m19:06:52.117484 [debug] [MainThread]: Resource report: {"command_name": "compile", "command_success": false, "command_wall_clock_time": 0.053729985, "process_in_blocks": "50792", "process_kernel_time": 0.203587, "process_mem_max_rss": "102216", "process_out_blocks": "16", "process_user_time": 1.107987}
+[0m19:06:52.117908 [debug] [MainThread]: Command `dbt compile` failed at 19:06:52.117820 after 0.05 seconds
+[0m19:06:52.118224 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7a5cdd346780>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7a5cdd390b90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7a5cdd4ea470>]}
+[0m19:06:52.118535 [debug] [MainThread]: Flushing usage events
+[0m19:06:53.794539 [debug] [MainThread]: An error was encountered while trying to flush usage events

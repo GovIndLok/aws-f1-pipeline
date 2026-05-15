@@ -1,0 +1,23 @@
+constructor_ref,team_lineage_id,root_team_name,lineage_sequence,rebrand_year_start,rebrand_year_end,predecessor_lineage_id,succession_type,rebrand_notes
+sauber,sauber_original_lineage,Sauber,1,1993,2005,,,Original independent Sauber team
+bmw_sauber,bmw_sauber_lineage,BMW Sauber,1,2006,2009,sauber_original_lineage,buyout,BMW bought out original Sauber entry
+sauber,sauber_lineage,Sauber,1,2010,2018,bmw_sauber_lineage,team_purchase,BMW withdrew - Sauber bought entry back
+alfa,sauber_lineage,Sauber,2,2019,2023,,,Alfa Romeo title sponsorship rebrand
+kick_sauber,sauber_lineage,Sauber,3,2024,2025,,,Kick energy drink sponsorship rebrand
+audi,audi_lineage,Audi,1,2026,,sauber_lineage,buyout,Audi acquired Sauber F1 entry as works programme
+toro_rosso,toro_rosso_lineage,Toro Rosso,1,2006,2019,,,Red Bull junior team created from Minardi purchase
+alphatauri,toro_rosso_lineage,Toro Rosso,2,2020,2023,,,Rebrand to Red Bull fashion brand AlphaTauri
+rb,toro_rosso_lineage,Toro Rosso,3,2024,,,,Simplified rebrand to RB
+force_india,force_india_lineage,Force India,1,2008,2018,,,Vijay Mallya consortium bought Spyker entry
+racing_point,racing_point_lineage,Racing Point,1,2019,2020,force_india_lineage,team_purchase,Stroll consortium bought Force India assets out of administration
+aston_martin,racing_point_lineage,Racing Point,2,2021,,,,Rebranded to Aston Martin following Stroll investment
+renault,renault_lineage,Renault,1,2002,2011,,,Renault purchased Benetton in 2000 entered as Renault works
+lotus_f1,renault_lineage,Renault,2,2012,2015,,,Lotus Cars took naming rights - still Renault-owned chassis
+renault,renault_lineage,Renault,3,2016,2020,,,Renault returned as works team after Lotus insolvency
+alpine,renault_lineage,Renault,4,2021,,,,Rebrand to Renault Alpine brand
+brawn,brawn_lineage,Brawn GP,1,2009,2009,,,Ross Brawn bought Honda entry after Honda withdrawal
+mercedes,mercedes_lineage,Mercedes,1,2010,,brawn_lineage,team_purchase,Mercedes-Benz purchased Brawn GP as works team
+ferrari,ferrari_lineage,Ferrari,1,1950,,,,Founding constructor - continuous works programme
+mclaren,mclaren_lineage,McLaren,1,1966,,,,Independent constructor - continuous
+williams,williams_lineage,Williams,1,1977,,,,Independent constructor - continuous
+red_bull,red_bull_lineage,Red Bull Racing,1,2005,,,,Red Bull purchased Jaguar Racing entry from Ford

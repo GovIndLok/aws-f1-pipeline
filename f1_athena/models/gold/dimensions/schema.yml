@@ -1,0 +1,151 @@
+version: 1
+
+models:
+    - name: dim_constructors
+      description: "Dimension table for constructors"
+      columns:
+        - name: constructorId
+          description: "Unique identifier for constructor"
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+              - unique:
+                    config:
+                      severity: error
+              - relationships:
+                    arguments:
+                      to: ref('silver_constructors')
+                      field: constructorId
+                    config:
+                      severity: error
+        - name: constructorRef
+          description: "Reference for constructor"
+        - name: constructorName
+          description: "Name of constructor"
+        - name: constructorNationality
+          description: "Nationality of constructor"
+        - name: constructorUrl
+          description: "Wikipedia URL for constructor"
+        - name: rootTeamName
+          description: "Root lineage name for constructor"
+        - name: teamLineageId
+          description: "Team lineage identifier for constructor"
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+        - name: rebrand
+          description: "Flag indicating if constructor is a rebrand"
+        - name: successorTeam
+          description: "Flag indicating if constructor is a successor team"
+        - name: currentName
+          description: "Flag indicating if constructor is using current name"
+    
+    - name: dim_drivers
+      description: "Dimension table for drivers"
+      columns:
+        - name: driverId
+          description: "Unique identifier for driver"
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+              - unique:
+                    config:
+                      severity: error
+              - relationships:
+                    arguments:
+                      to: ref('silver_drivers')
+                      field: driverId
+                    config:
+                      severity: error
+        - name: driverRef
+          description: "Reference for driver"
+        - name: forename
+          description: "Forename of driver"
+        - name: surname
+          description: "Surname of driver"
+        - name: fullName
+          description: "Full name of driver"
+        - name: nationality
+          description: "Nationality of driver"
+        - name: dob
+          description: "Date of birth of driver"
+        - name: currentNumber
+          description: "Current number of driver"
+        - name: lastRaceSeason
+          description: "Last race season of driver"
+        - name: Active
+          description: "Flag indicating if driver is active"
+          
+    - name: dim_races
+      description: "Dimension table for races"
+      columns:
+        - name: raceId
+          description: "Unique identifier for race"
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+              - unique:
+                    config:
+                      severity: error
+              - relationships:
+                    arguments:
+                      to: ref('silver_races')
+                      field: raceId
+                    config:
+                      severity: error
+        - name: circuitId
+          description: "Unique identifier for circuit"
+          tests:
+              - relationships:
+                    arguments:
+                      to: ref('silver_circuits')
+                      field: circuitId
+                    config:
+                      severity: error
+        - name: year
+          description: "Year the race was held. (Also refers to as Season)"
+        - name: round
+          description: "Round of race for given year / season the race was held"
+        - name: raceName
+          description: "Name of race"
+        - name: raceDate
+          description: "Date of race"
+        - name: raceTime
+          description: "Time of race"
+    
+    - name: dim_circuits
+      description: "Dimension table for circuits"
+      columns:
+        - name: circuitId
+          description: "Unique identifier for circuit"
+          tests:
+              - not_null:
+                    config:
+                      severity: error
+              - unique:
+                    config:
+                      severity: error
+              - relationships:
+                    arguments:
+                      to: ref('silver_circuits')
+                      field: circuitId
+                    config:
+                      severity: error
+        - name: circuitRef
+          description: "Reference for circuit"
+        - name: circuitName
+          description: "Name of circuit"
+        - name: circuitLocation
+          description: "Location of circuit"
+        - name: country
+          description: "Country of circuit"
+        - name: latitude
+          description: "Latitude of circuit"
+        - name: longitude
+          description: "Longitude of circuit"
+        - name: altitude
+          description: "Altitude of circuit"

@@ -1,0 +1,367 @@
+version: 2
+
+models:
+  - name: silver_constructors
+    description: "Constructor dimension enriched with F1 team lineage tracking. Rebrands (same team, new name) share a team_lineage_id. Successions (new entity, acquired entry) have a new team_lineage_id linked to the predecessor via predecessor_lineage_id. Lineage data sourced from seed_constructor_lineage."
+
+    columns:
+      - name: constructorId
+        description: "Integer ID from the bronze layer (cast from constructorId). May repeat for constructors with multiple eras (e.g. Renault 2002-2011 and 2016-2020)."
+
+      - name: constructorRef
+        description: "Lowercase constructor reference key (e.g. alphatauri, rb). Matches seed_constructor_lineage."
+
+      - name: constructorName
+        description: "Official constructor name as of their last race entry."
+
+      - name: nationality
+        description: "Nationality of the constructor."
+
+      - name: wikipediaUrl
+        description: "Wikipedia URL for the constructor. May be NULL."
+
+      - name: team_lineage_id
+        description: "Groups constructors that are the same entity under different names (rebrands share an ID). Succession teams receive a new lineage_id. Falls back to constructor_ref || '_lineage' if not in the seed."
+
+      - name: root_team_name
+        description: "The original/primary display name for the lineage group (e.g. 'Toro Rosso' for AlphaTauri)."
+    
+      - name: lineage_sequence
+        description: "Position within the lineage (1 = original name, 2 = first rebrand, etc.)."
+
+      - name: rebrand_year_start
+        description: "First season this constructor raced under this name."
+
+      - name: rebrand_year_end
+        description: "Last season this constructor raced under this name. NULL means currently active."
+
+      - name: predecessor_lineage_id
+        description: "For succession teams only: the team_lineage_id of the entry they acquired. NULL for rebrands and original independent teams."
+        tests:
+          - relationships:
+              arguments:
+                to: ref('seed_constructor_lineage')
+                field: team_lineage_id
+              config:
+                where: "predecessor_lineage_id IS NOT NULL"
+                severity: warn
+
+      - name: succession_type
+        description: "How the succession occurred. NULL for rebrands within the same lineage."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['buyout', 'team_purchase', 'license_transfer']
+              config:
+                where: "succession_type IS NOT NULL"
+
+      - name: rebrand_notes
+        description: "Human-readable explanation of the team name change or succession event."
+
+      - name: is_part_of_lineage
+        description: "TRUE if this constructor is tracked in seed_constructor_lineage, FALSE otherwise."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+      - name: is_rebrand
+        description: "TRUE if this constructor is a renamed version of an earlier team (lineage_sequence > 1)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+      - name: is_successor_team
+        description: "TRUE if this constructor acquired another team's entry (has a predecessor_lineage_id)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+      - name: is_current_name
+        description: "TRUE if rebrand_year_end is NULL (team is still racing under this name)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+  - name: silver_driver_num
+    description: "Tracking driver number changes over time."
+    columns:
+      - name: driverId
+        description: "Integer ID from the bronze layer (cast from driverId). May repeat for drivers with multiple eras (e.g. Schumacher 1991-2006 and 2010-2012)."
+        tests:
+          - not_null
+      - name: driverNumber
+        description: "Driver number used in entry."
+        tests:
+          - not_null
+      - name: startDate
+        description: "First date the driver used the number in entry."
+        tests:
+          - not_null
+      - name: endDate
+        description: "Last date the driver used the number in entry."
+      - name: startYear
+        description: "Season year when the driver first used this number in a stint."
+      - name: startRound
+        description: "Round number of the first race in which the driver used this number in a stint."
+      - name: endYear
+        description: "Season year when the driver last used this number in a stint."
+      - name: endRound
+        description: "Round number of the last race in which the driver used this number in a stint."
+      - name: raceCount
+        description: "Number of races the driver used the number in entry."
+  - name: silver_circuits
+    description: "Cleaned and deduplicated F1 circuits data with cast numeric coordinates."
+    columns:
+      - name: circuitId
+        description: "Unique identifier for each circuit."
+      - name: circuitRef
+        description: "Short reference string for the circuit."
+      - name: name
+        description: "Full name of the circuit."
+      - name: location
+        description: "City or location of the circuit."
+      - name: country
+        description: "Country where the circuit is located."
+      - name: lat
+        description: "Latitude of the circuit (DECIMAL 10,7)."
+      - name: lng
+        description: "Longitude of the circuit (DECIMAL 10,7)."
+      - name: alt
+        description: "Altitude of the circuit in metres (INT)."
+      - name: url
+        description: "Wikipedia URL for the circuit."
+
+  - name: silver_drivers
+    description: "Cleaned and deduplicated F1 drivers data with cast types and null handling."
+    columns:
+      - name: driverId
+        description: "Unique identifier for each driver."
+      - name: driverRef
+        description: "Short reference string for the driver."
+      - name: number
+        description: "Driver's career number (INT, nullable). Drivers choose a number to carry throughout their career; it can change if they win the championship (eligible to use #1) or submit a formal request under 2026 regulations."
+      - name: code
+        description: "Three-letter driver code (STRING, nullable)."
+      - name: forename
+        description: "Driver's first name."
+      - name: surname
+        description: "Driver's last name."
+      - name: dob
+        description: "Driver's date of birth (DATE)."
+      - name: nationality
+        description: "Driver's nationality."
+      - name: url
+        description: "Wikipedia URL for the driver."
+
+  - name: silver_seasons
+    description: "F1 seasons data with year and reference URL."
+    columns:
+      - name: year
+        description: "The year of the F1 season."
+      - name: url
+        description: "Wikipedia URL for the season."
+
+  - name: silver_races
+    description: "Cleaned and deduplicated F1 races data with cast date and time types."
+    columns:
+      - name: raceId
+        description: "Unique identifier for each race."
+      - name: year
+        description: "Season year of the race."
+      - name: round
+        description: "Round number within the season."
+      - name: circuitId
+        description: "Foreign key to the circuit where the race was held."
+      - name: name
+        description: "Official name of the race."
+      - name: raceDate
+        description: "Date of the race (DATE, nullable)."
+      - name: raceTime
+        description: "Local start time of the race (TIME, nullable)."
+      - name: url
+        description: "Wikipedia URL for the race."
+
+  - name: silver_constructor_results
+    description: "Cleaned constructor race results with cast points and status."
+    columns:
+      - name: constructorResultId
+        description: "Unique identifier for each constructor result record."
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: constructorId
+        description: "Foreign key to the constructor."
+      - name: points
+        description: "Points scored by the constructor in the race (DECIMAL 4,1)."
+      - name: status
+        description: "Flag indicating whether the constructor was disqualified or received a race flag (e.g. black flag, DSQ); stored as a short code up to 3 characters."
+
+  - name: silver_constructor_standings
+    description: "Cleaned constructor championship standings at each race point."
+    columns:
+      - name: constructorStandingsId
+        description: "Unique identifier for each constructor standing record."
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: constructorId
+        description: "Foreign key to the constructor."
+      - name: points
+        description: "Cumulative championship points at this race (DECIMAL 3,1)."
+      - name: position
+        description: "Championship position at this race."
+      - name: wins
+        description: "Number of wins accumulated to this point in the season."
+
+  - name: silver_driver_standings
+    description: "Cleaned driver championship standings at each race point."
+    columns:
+      - name: driverStandingsId
+        description: "Unique identifier for each driver standing record."
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: driverId
+        description: "Foreign key to the driver."
+      - name: points
+        description: "Cumulative championship points at this race (DECIMAL 3,1)."
+      - name: position
+        description: "Championship position at this race."
+      - name: wins
+        description: "Number of wins accumulated to this point in the season."
+
+  - name: silver_lap_times
+    description: "Cleaned lap time records with cast interval time and integer milliseconds."
+    columns:
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: driverId
+        description: "Foreign key to the driver."
+      - name: lap
+        description: "Lap number."
+      - name: position
+        description: "Driver position at end of the lap."
+      - name: time
+        description: "Lap time as INTERVAL (hh:mm:ss.sss)."
+      - name: milliseconds
+        description: "Lap time in milliseconds (INT)."
+
+  - name: silver_pit_stops
+    description: "Cleaned pit stop records with cast interval time and integer milliseconds."
+    columns:
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: driverId
+        description: "Foreign key to the driver."
+      - name: stop
+        description: "Pit stop sequence number for the driver in this race."
+      - name: lap
+        description: "Lap number in race when the pit stop took place"
+      - name: time
+        description: "Display time it took for pitstop"
+      - name: milliseconds
+        description: "Pit stop duration in milliseconds (INT)."
+      - name: time
+        description: "Time of the pit stop during the race as INTERVAL."
+
+  - name: silver_qualifyings
+    description: "Cleaned qualifying session results with cast interval lap times."
+    columns:
+      - name: qualifyId
+        description: "Unique identifier for each qualifying record."
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: driverId
+        description: "Foreign key to the driver."
+      - name: position
+        description: "Final qualifying position."
+      - name: q1_sec
+        description: "Q1 lap time in total seconds as DOUBLE (nullable)."
+      - name: q2_sec
+        description: "Q2 lap time in total seconds as DOUBLE (nullable)."
+      - name: q3_sec
+        description: "Q3 lap time in total seconds as DOUBLE (nullable)."
+
+  - name: silver_results
+    description: "Cleaned race results with cast position, points, time, and fastest lap fields."
+    columns:
+      - name: resultId
+        description: "Unique identifier for each result record."
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: driverId
+        description: "Foreign key to the driver."
+      - name: constructorId
+        description: "Foreign key to the constructor."
+      - name: number
+        description: "Driver number used in this race."
+      - name: grid
+        description: "Starting grid position."
+      - name: finshPosition
+        description: "Final classified finishing position (INT, nullable for non-finishers)."
+      - name: resultCode
+        description: "Position text code representing result status (e.g. R, D, W)."
+      - name: finshOrder
+        description: "Order of classification including non-finishers (INT)."
+      - name: points
+        description: "Championship points awarded for this result (DECIMAL 3,1)."
+      - name: laps
+        description: "Number of laps completed."
+      - name: timeDisplay
+        description: "Finish time as a display string (gap to leader or absolute time)."
+      - name: timeMilliseconds
+        description: "Finish time in milliseconds (INT, nullable)."
+      - name: fastestLap
+        description: "Lap number on which the driver set their fastest lap (INT, nullable)."
+      - name: fastestLapRank
+        description: "Rank among all drivers for fastest lap in this race (INT, nullable)."
+      - name: fastestLapTimeDisplay
+        description: "Fastest lap time as a display string (nullable)."
+      - name: fastestLapTimeMilliseconds
+        description: "Fastest lap time converted to milliseconds (INT, nullable)."
+      - name: fastestLapSpeed
+        description: "Average speed during the fastest lap in km/h (DECIMAL 6,3, nullable)."
+      - name: statusId
+        description: "Foreign key to the status table indicating race finish status."
+
+  - name: silver_sprint_results
+    description: "Cleaned sprint race results with cast position, points, time, and fastest lap fields."
+    columns:
+      - name: resultId
+        description: "Unique identifier for each sprint result record."
+      - name: raceId
+        description: "Foreign key to the race."
+      - name: driverId
+        description: "Foreign key to the driver."
+      - name: constructorId
+        description: "Foreign key to the constructor."
+      - name: number
+        description: "Driver number used in this sprint race."
+      - name: grid
+        description: "Starting grid position for the sprint race."
+      - name: finshPosition
+        description: "Final classified finishing position in the sprint (INT, nullable)."
+      - name: resultCode
+        description: "Single-character representation of the sprint race outcome — either the numeric finishing position if the driver finished normally, or a status character indicating a non-standard result (e.g. R for Retired, D for Disqualified)."
+      - name: finshOrder
+        description: "Order of classification including non-finishers (INT)."
+      - name: points
+        description: "Championship points awarded for this sprint result (INT)."
+      - name: laps
+        description: "Number of laps completed in the sprint race."
+      - name: timeDisplay
+        description: "Sprint finish time as a display string."
+      - name: timeMilliseconds
+        description: "Sprint finish time in milliseconds (INT, nullable)."
+      - name: fastestLap
+        description: "Lap number on which the driver set their fastest lap in the sprint (INT, nullable)."
+      - name: fastestLapTimeDisplay
+        description: "Fastest sprint lap time as a display string (nullable)."
+      - name: fastestLapTimeMilliseconds
+        description: "Fastest sprint lap time converted to milliseconds (INT, nullable)."
+      - name: statusId
+        description: "Foreign key to the status table indicating sprint finish status."

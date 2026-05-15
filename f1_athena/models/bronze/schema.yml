@@ -1,0 +1,194 @@
+version: 1
+
+models:
+    - name: bronze_circuits
+      columns:
+        - name: circuitId
+          description: "Unique identifier for each circuit."
+          tests:
+            - not_null
+    - name: bronze_constructors
+      columns:
+        - name: constructorId
+          description: "Unique identifier for each constructor standing."
+          tests:
+            - not_null
+    - name: bronze_drivers
+      columns:
+        - name: driverId
+          description: "Unique identifier for each driver."
+          tests:
+            - not_null
+    - name: bronze_seasons
+      columns:
+        - name: year
+          description: "The year of the season."
+          tests:
+            - not_null
+            - unique
+    - name: bronze_races
+      columns:
+        - name: raceId
+          description: "Unique identifier for each race."
+          tests:
+            - not_null
+        - name: circuitId
+          description: "Identifier for the circuit associated with the race."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_constructor_results
+      columns:
+        - name: constructorResultsId
+          description: "Unique identifier for each constructor result."
+          tests:
+            - not_null
+        - name: raceId
+          description: "Identifier for the race associated with the constructor result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: constructorId
+          description: "Identifier for the constructor associated with the result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_constructor_standings
+      columns:
+        - name: constructorStandingsId
+          description: "Unique identifier for each constructor standing."
+          tests:
+            - not_null
+        - name: raceId
+          description: "Identifier for the race associated with the constructor standing."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: constructorId
+          description: "Identifier for the constructor associated with the standing."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_driver_standings
+      columns:
+        - name: driverStandingsId
+          description: "Unique identifier for each driver standing."
+          tests:
+            - not_null
+        - name: raceId
+          description: "Identifier for the race associated with the driver standing."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverId  
+          description: "Identifier for the driver associated with the standing."
+          tests:
+            - not_null: 
+                  config:
+                    severity: warn
+    - name: bronze_lap_times
+      columns:
+        - name: raceId
+          description: "Identifier for the race associated with the lap time."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverId
+          description: "Identifier for the driver associated with the lap time."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_pit_stops
+      columns:
+        - name: raceId
+          description: "Identifier for the race associated with the pit stop."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverId
+          description: "Identifier for the driver associated with the pit stop."  
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_qualifyings
+      columns:
+        - name: qualifyId
+          description: "Unique identifier for each qualifying result."
+          tests:
+            - not_null
+        - name: raceId
+          description: "Identifier for the race associated with the qualifying result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverId
+          description: "Identifier for the driver associated with the qualifying result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: constructorId
+          description: "Identifier for the constructor associated with the qualifying result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_results
+      columns:
+        - name: resultId
+          description: "Unique identifier for each result."
+          tests:
+            - not_null
+        - name: raceId
+          description: "Identifier for the race associated with the result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverId
+          description: "Identifier for the driver associated with the result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: constructorId
+          description: "Identifier for the constructor associated with the result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+    - name: bronze_sprint_results
+      columns:
+        - name: resultId
+          description: "Unique identifier for each sprint result."
+          tests:
+            - not_null
+        - name: raceId
+          description: "Identifier for the race associated with the sprint result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn
+        - name: driverId
+          description: "Identifier for the driver associated with the sprint result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn  
+        - name: constructorId
+          description: "Identifier for the constructor associated with the sprint result."
+          tests:
+            - not_null:
+                config:
+                  severity: warn          

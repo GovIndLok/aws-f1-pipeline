@@ -1,0 +1,300 @@
+version: 1
+
+models: 
+    - name: fct_lap_times
+      description: "fact table for lap times in regular races"
+      tests:
+        - dbt_utils.unique_combination_of_columns:
+            arguments:
+              combination_of_columns:
+                - raceId
+                - driverId
+                - lap
+            config:
+              severity: error
+      columns:
+        - name: raceId
+          description: "race id for race the lap was done"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_races')
+                  field: raceId
+                config:
+                  severity: error
+        - name: driverId
+          description: "driver id for driver the lap was done by"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_drivers')
+                  field: driverId
+                config:
+                  severity: error
+        - name: circuitId
+          description: "circuit id for circuit the lap was done at"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_circuits')
+                  field: circuitId
+                config:
+                  severity: error
+        - name: constructorId 
+          description: "constructor id for constructor represented by driver who did the lap"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_constructors')
+                  field: constructorId
+                config:
+                  severity: error
+        - name: lap
+          description: "lap no for total laps of the race"
+        - name: position
+          description: "grid position of driver at the end of lap"
+        - name: lapTime
+          description: "lap time for display (string)"
+        - name: lapMS
+          description: "lap time in milliseconds for calculation"
+    
+    - name: fct_pit_stops
+      description: "fact tables for pit stops"
+      tests:
+        - dbt_utils.unique_combination_of_columns:
+            arguments:
+              combination_of_columns:
+                - raceId
+                - driverId
+                - stop
+            config:
+              severity: error
+      columns:
+        - name: raceId
+          description: "race id for race the pit stop was done in"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_races')
+                  field: raceId
+                config:
+                  severity: error
+        - name: driverId
+          description: "driver id for driver who did the pit stop"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_drivers')
+                  field: driverId
+                config:
+                  severity: error
+        - name: circuitId
+          description: "circuit id for circuit the pit stop was done at"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_circuits')
+                  field: circuitId
+                config:
+                  severity: error
+        - name: constructorId 
+          description: "constructor id for consturctor performing pit stop"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref("dim_constructors")
+                  field: constructorId
+                config:
+                  severity: error
+        - name: stop
+          description: "number of stop in the race"
+        - name: lap
+          description: "lap no for total laps of the race"
+        - name: pitStopTime
+          description: "pit stop time for display (string)"
+        - name: pitStopMS
+          description: "pit stop time in milliseconds for calculation"
+    
+    - name: fct_qualifyings
+      description: "fact table for qualifying results"
+      columns:
+        - name: qualifyId
+          description: "qualifying id (primary key) to indentify each driver's qualifying result"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - unique: 
+                config:
+                  severity: error
+        - name: raceId
+          description: "race id for race the qualifying was done in"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_races')
+                  field: raceId
+                config:
+                  severity: error
+        - name: driverId
+          description: "driver id to identify driver in qualifying"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_drivers')
+                  field: driverId
+                config:
+                  severity: error
+        - name: constructorId
+          description: "constructor id for constructor represented by driver who did the qualifying"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_constructors')
+                  field: constructorId
+                config:
+                  severity: error
+        - name: circuitId
+          description: "circuit id for circuit the qualifying was done at"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_circuits')
+                  field: circuitId
+                config:
+                  severity: error
+        - name: qualifyingPosition
+          description: "qualified grid position of driver at the end of qualifying"
+        - name: q1Sec
+          description: "fastest q1 timings set by drivers (top 15 pass to q2)"
+        - name: q2Sec
+          description: "fastest q2 timings set by drivers (top 10 pass to q3)"
+        - name: q3Sec
+          description: "fastest q3 timings set by drivers (final race order for top 10)"
+
+    - name: fct_results
+      description: "fact table for regular race result"
+      columns:
+        - name: resultId
+          description: "result id to indetify individual results"
+          tests: 
+            - not_null: 
+                config:
+                  severity: error
+            - unique: 
+                config:
+                  severity: error
+        - name: raceId
+          description: "race id identifier for the race associated with the result"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_races')
+                  field: raceId
+                config:
+                  severity: error
+        - name: driverId
+          description: "Unique identifier for the driver associated with this race result."
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_drivers')
+                  field: driverId
+                config:
+                  severity: error
+        - name: constructorId
+          description: "Unique identifier for constructor associated with the result"
+          tests:
+            - not_null:
+                config:
+                  severity: error
+            - relationships: 
+                arguments:
+                  to: ref('dim_constructors')
+                  field: constructorId
+                config:
+                  severity: error
+        - name: circuitId
+          description: "Unique identifier for circuit associated in the result"
+          tests: 
+            - not_null:
+                config:
+                  severity: error
+            - relationships:
+                arguments:
+                  to: ref('dim_circuits')
+                  field: circuitId
+                config:
+                  severity: error
+        - name: startPosition
+          description: "grid position of driver at the start of the race"
+        - name: finishPosition
+          description: "final position of driver at the end of the race"
+        - name: finishTextCode
+          description: "text code for finish position"
+        - name: finishOrder
+          description: "order of finish"
+        - name: points
+          description: "points scored by driver in the race"
+        - name: lapCompleted
+          description: "number of laps completed by driver in the race"
+        - name: CompletionTimeSec
+          description: "completion time of driver in the race in seconds"
+        - name: fastestLap
+          description: "lap number when the driver did the fastest lap"
+        - name: fastestLapRank
+          description: "ranking of driver based ob the fasted lap time in the race"
+        - name: fastestLapTimeSec
+          description: "lap time of the fastest lap in the race by the driver"
+        - name: fastestLapSpeed
+          description: "top speed achieved in the race"
+        - name: finishStatusId
+          description: "status id for finish position"
+        - name: finishStatus
+          description: "status code for finish position description of status id"
+          tests:
+            - not_null:
+                config:
+                  severity: error
