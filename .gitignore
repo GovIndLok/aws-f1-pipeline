@@ -11,3 +11,6 @@ wheels/
 
 # Environment Variables
 .envrc 
+
+# Personal rough notes
+notes/
