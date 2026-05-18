@@ -9,4 +9,5 @@ dependencies = [
     "botocore[crt]>=1.42.89",
     "dbt-athena>=1.10.0",
     "dbt-core>=1.11.8",
+    "fastf1>=3.8.3",
 ]
