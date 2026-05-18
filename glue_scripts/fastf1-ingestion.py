@@ -84,6 +84,7 @@ def filter_columns(df, dataset_type):
             'driver',
             'drivernumber',
             'position',
+            'ClassifiedPosition',
             'points',
             'status',
             'lapcount',
@@ -130,8 +131,8 @@ def write_to_s3(df, bucket, prefix, dataset_type, season, round_number):
     s3_key = (
         f"{prefix}"
         f"{dataset_type}/"
-        f"season={season}/"
-        f"round={round_number}/"
+        f"{season}/"
+        f"{round_number}/"
         f"{dataset_type}.csv"
     )
 
