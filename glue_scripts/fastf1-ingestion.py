@@ -1,12 +1,28 @@
 import sys
 import os
 import io
+import time
 from datetime import datetime
 
 import boto3
-import fastf1
+import requests
 import pandas as pd
 from awsglue.utils import getResolvedOptions
+
+
+BASE_URL = "https://api.jolpi.ca/ergast/f1"
+
+TABLE_KEY_MAP = {
+    "circuits": ("CircuitTable", "Circuits"),
+    "constructors": ("ConstructorTable", "Constructors"),
+    "drivers": ("DriverTable", "Drivers"),
+    "races": ("RaceTable", "Races"),
+    "results": ("RaceTable", "Races"),
+    "sprint": ("RaceTable", "Races"),
+    "qualifying": ("RaceTable", "Races"),
+    "pitstops": ("RaceTable", "Races"),
+    "laps": ("RaceTable", "Races"),
+}
 
 
 def get_job_parameters():
@@ -20,37 +36,304 @@ def get_job_parameters():
     ])
 
 
-def setup_fastf1_cache():
-    cache_dir = "/tmp/fastf1_cache"
+def fetch_json(endpoint, params=None, max_retries=5):
+    url = f"{BASE_URL}/{endpoint}"
+    all_data = []
 
-    os.makedirs(cache_dir, exist_ok=True)
+    offset = 0
+    limit = 500
 
-    fastf1.Cache.enable_cache(cache_dir)
+    while True:
+        paginated_params = {"limit": limit, "offset": offset}
+        if params:
+            paginated_params.update(params)
 
-    print(f"FastF1 cache enabled: {cache_dir}")
+        data = None
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, params=paginated_params, timeout=30)
+                if response.status_code == 429:
+                    wait_time = 3 * (attempt + 1)
+                    print(f"  Rate limited. Waiting {wait_time}s... (attempt {attempt+1}/{max_retries})")
+                    time.sleep(wait_time)
+                    continue
+
+                response.raise_for_status()
+                data = response.json()
+                break
+            except requests.exceptions.RequestException as e:
+                print(f"  Request error: {e}")
+                if attempt == max_retries - 1:
+                    print(f"  All retries exhausted for {url}")
+                    return all_data
+                time.sleep(3 * (attempt + 1))
+
+        if data is None:
+            print(f"  Failed to fetch data after {max_retries} retries")
+            return all_data
+
+        mrdata = data.get("MRData", {})
+        total = int(mrdata.get("total", "0"))
+
+        table_key_name, data_key_name = TABLE_KEY_MAP.get(endpoint.split("/")[-1], (None, None))
+
+        if table_key_name is None:
+            for key in mrdata:
+                if isinstance(mrdata[key], dict) and key.endswith("Table"):
+                    table_key_name = key
+                    data_key_name = key.replace("Table", "")
+                    if not data_key_name.endswith("s"):
+                        data_key_name = data_key_name + "s"
+                    break
+
+        table_data = []
+        if table_key_name and table_key_name in mrdata:
+            table_data = mrdata[table_key_name].get(data_key_name, [])
+        elif "CircuitTable" in mrdata:
+            table_data = mrdata["CircuitTable"].get("Circuits", [])
+        elif "ConstructorTable" in mrdata:
+            table_data = mrdata["ConstructorTable"].get("Constructors", [])
+        elif "DriverTable" in mrdata:
+            table_data = mrdata["DriverTable"].get("Drivers", [])
+        elif "RaceTable" in mrdata:
+            table_data = mrdata["RaceTable"].get("Races", [])
+
+        if isinstance(table_data, dict):
+            table_data = [table_data]
+
+        all_data.extend(table_data)
+
+        if len(all_data) >= total or len(table_data) < limit:
+            break
+
+        offset += limit
+        time.sleep(1.5)
+
+    return all_data
 
 
-def fetch_race_session(season, round_number):
+def fetch_circuits():
+    print("Fetching circuits...")
+    data = fetch_json("circuits")
+    rows = []
+    for item in data:
+        rows.append({
+            "circuitid": item.get("circuitId"),
+            "circuitref": item.get("circuitId"),
+            "name": item.get("circuitName"),
+            "location": item.get("Location", {}).get("locality", ""),
+            "country": item.get("Location", {}).get("country", ""),
+            "lat": float(item.get("Location", {}).get("lat", 0) or 0),
+            "lng": float(item.get("Location", {}).get("long", 0) or 0),
+            "alt": int(item.get("Location", {}).get("alt", 0) or 0),
+            "url": item.get("url", ""),
+        })
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
 
-    print(f"Fetching season={season}, round={round_number}")
 
-    session = fastf1.get_session(
-        season,
-        round_number,
-        'R'
-    )
+def fetch_constructors(season):
+    print("Fetching constructors...")
+    data = fetch_json(f"{season}/constructors")
+    rows = []
+    for item in data:
+        rows.append({
+            "constructorid": item.get("constructorId"),
+            "constructorref": item.get("constructorId"),
+            "name": item.get("name"),
+            "nationality": item.get("nationality", ""),
+            "url": item.get("url", ""),
+        })
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
 
-    session.load(
-        laps=True,
-        telemetry=False,
-        weather=False,
-        messages=False
-    )
 
-    return {
-        "races": session.results,
-        "laps": session.laps
-    }
+def fetch_drivers(season):
+    print("Fetching drivers...")
+    data = fetch_json(f"{season}/drivers")
+    rows = []
+    for item in data:
+        rows.append({
+            "driverid": item.get("driverId"),
+            "driverref": item.get("driverId"),
+            "number": item.get("number", ""),
+            "code": item.get("code", ""),
+            "forename": item.get("givenName", ""),
+            "surname": item.get("familyName", ""),
+            "dob": item.get("dateOfBirth", ""),
+            "nationality": item.get("nationality", ""),
+            "url": item.get("url", ""),
+        })
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def fetch_races(season):
+    print("Fetching races...")
+    data = fetch_json(f"{season}/races")
+    rows = []
+    for item in data:
+        rows.append({
+            "raceid": item.get("round"),
+            "year": item.get("season"),
+            "round": item.get("round"),
+            "circuitid": item.get("Circuit", {}).get("circuitId"),
+            "name": item.get("raceName"),
+            "date": item.get("date", ""),
+            "time": item.get("time", "").replace("Z", "") if item.get("time") else "",
+            "url": item.get("url", ""),
+            "fp1_date": item.get("FirstPractice", {}).get("date", ""),
+            "fp1_time": item.get("FirstPractice", {}).get("time", "").replace("Z", "") if item.get("FirstPractice", {}).get("time") else "",
+            "fp2_date": item.get("SecondPractice", {}).get("date", ""),
+            "fp2_time": item.get("SecondPractice", {}).get("time", "").replace("Z", "") if item.get("SecondPractice", {}).get("time") else "",
+            "fp3_date": item.get("ThirdPractice", {}).get("date", ""),
+            "fp3_time": item.get("ThirdPractice", {}).get("time", "").replace("Z", "") if item.get("ThirdPractice", {}).get("time") else "",
+            "quali_date": item.get("Qualifying", {}).get("date", ""),
+            "quali_time": item.get("Qualifying", {}).get("time", "").replace("Z", "") if item.get("Qualifying", {}).get("time") else "",
+            "sprint_date": item.get("Sprint", {}).get("date", ""),
+            "sprint_time": item.get("Sprint", {}).get("time", "").replace("Z", "") if item.get("Sprint", {}).get("time") else "",
+        })
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def fetch_results(season):
+    print("Fetching results...")
+    rows = []
+    for round_num in range(1, 25):
+        races = fetch_json(f"{season}/{round_num}/results")
+        for race in races:
+            results = race.get("Results", [])
+            for item in results:
+                time_or_result = item.get("Time", {})
+                fastest_lap = item.get("FastestLap", {})
+                rows.append({
+                    "resultid": item.get("resultId"),
+                    "raceid": round_num,
+                    "driverid": item.get("Driver", {}).get("driverId"),
+                    "constructorid": item.get("Constructor", {}).get("constructorId"),
+                    "number": item.get("number", ""),
+                    "grid": item.get("grid"),
+                    "position": item.get("position", ""),
+                    "positiontext": item.get("positionText", ""),
+                    "positionorder": item.get("position"),
+                    "points": item.get("points"),
+                    "laps": item.get("laps"),
+                    "time": item.get("time", time_or_result.get("time", "")),
+                    "milliseconds": time_or_result.get("millis", ""),
+                    "fastestlap": fastest_lap.get("lap", ""),
+                    "rank": fastest_lap.get("rank", ""),
+                    "fastestlaptime": fastest_lap.get("Time", {}).get("time", ""),
+                    "fastestlapspeed": fastest_lap.get("AverageSpeed", {}).get("speed", ""),
+                    "statusid": item.get("statusId"),
+                })
+        if races:
+            time.sleep(2)
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def fetch_sprint_results(season):
+    print("Fetching sprint results...")
+    rows = []
+    for round_num in range(1, 25):
+        races = fetch_json(f"{season}/{round_num}/sprint")
+        if not races:
+            continue
+        for race in races:
+            results = race.get("SprintResults", race.get("Results", []))
+            for item in results:
+                time_or_result = item.get("Time", {})
+                fastest_lap = item.get("FastestLap", {})
+                rows.append({
+                    "resultid": item.get("resultId"),
+                    "raceid": round_num,
+                    "driverid": item.get("Driver", {}).get("driverId"),
+                    "constructorid": item.get("Constructor", {}).get("constructorId"),
+                    "number": item.get("number", ""),
+                    "grid": item.get("grid"),
+                    "position": item.get("position", ""),
+                    "positiontext": item.get("positionText", ""),
+                    "positionorder": item.get("position"),
+                    "points": item.get("points"),
+                    "laps": item.get("laps"),
+                    "time": item.get("time", time_or_result.get("time", "")),
+                    "milliseconds": time_or_result.get("millis", ""),
+                    "fastestlap": fastest_lap.get("lap", ""),
+                    "rank": fastest_lap.get("rank", ""),
+                    "fastestlaptime": fastest_lap.get("Time", {}).get("time", ""),
+                    "fastestlapspeed": fastest_lap.get("AverageSpeed", {}).get("speed", ""),
+                    "statusid": item.get("statusId"),
+                })
+        time.sleep(2)
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def fetch_qualifying(season):
+    print("Fetching qualifying...")
+    rows = []
+    for round_num in range(1, 25):
+        races = fetch_json(f"{season}/{round_num}/qualifying")
+        if not races:
+            continue
+        for race in races:
+            qualifiers = race.get("QualifyingResults", [])
+            for item in qualifiers:
+                rows.append({
+                    "qualifyid": item.get("qualifyingId"),
+                    "raceid": round_num,
+                    "driverid": item.get("Driver", {}).get("driverId"),
+                    "constructorid": item.get("Constructor", {}).get("constructorId"),
+                    "number": item.get("number"),
+                    "position": item.get("position"),
+                    "q1": item.get("Q1", ""),
+                    "q2": item.get("Q2", ""),
+                    "q3": item.get("Q3", ""),
+                })
+        time.sleep(2)
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def fetch_pit_stops(season):
+    print("Fetching pit stops...")
+    rows = []
+    for round_num in range(1, 25):
+        races = fetch_json(f"{season}/{round_num}/pitstops")
+        if not races:
+            continue
+        for race in races:
+            pitstops = race.get("PitStops", [])
+            for item in pitstops:
+                rows.append({
+                    "raceid": round_num,
+                    "driverid": item.get("driverId"),
+                    "stop": item.get("stop"),
+                    "lap": item.get("lap"),
+                    "time": item.get("time", ""),
+                    "duration": item.get("duration", ""),
+                    "milliseconds": item.get("milliseconds"),
+                })
+        time.sleep(2)
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
+def fetch_lap_times(season):
+    print("Fetching lap times...")
+    rows = []
+    for round_num in range(1, 25):
+        races = fetch_json(f"{season}/{round_num}/laps")
+        if not races:
+            continue
+        for race in races:
+            laps = race.get("Laps", [])
+            for lap in laps:
+                timings = lap.get("Timings", [])
+                for timing in timings:
+                    rows.append({
+                        "raceid": round_num,
+                        "driverid": timing.get("driverId"),
+                        "lap": timing.get("lap"),
+                        "position": timing.get("position"),
+                        "time": timing.get("time", ""),
+                        "milliseconds": None,
+                    })
+        time.sleep(2)
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
 
 
 def normalize_dataframe(df):
@@ -68,49 +351,12 @@ def normalize_dataframe(df):
 
     df = df.copy()
 
-    # normalize columns safely
     df.columns = [
         str(col).strip().lower().replace(" ", "_")
         for col in df.columns
     ]
 
     return df
-
-
-def filter_columns(df, dataset_type):
-
-    column_mapping = {
-        'races': [
-            'driver',
-            'drivernumber',
-            'position',
-            'ClassifiedPosition',
-            'points',
-            'status',
-            'lapcount',
-            'time',
-            'gridposition'
-        ],
-        'laps': [
-            'driver',
-            'drivernumber',
-            'lapnumber',
-            'laptime',
-            'sector1time',
-            'sector2time',
-            'sector3time',
-            'ispersonalbest'
-        ]
-    }
-
-    allowed = column_mapping.get(dataset_type)
-
-    if not allowed:
-        return df
-
-    existing = [c for c in allowed if c in df.columns]
-
-    return df[existing]
 
 
 def add_metadata(df, season, round_number):
@@ -121,7 +367,7 @@ def add_metadata(df, season, round_number):
 
     df['race_round'] = round_number
 
-    df['source_system'] = 'fastf1'
+    df['source_system'] = 'jolpica'
 
     return df
 
@@ -156,28 +402,33 @@ def main():
 
     args = get_job_parameters()
 
-    season = int(args['SEASON'])
+    season = str(args['SEASON'])
     round_number = int(args['ROUND'])
 
-    setup_fastf1_cache()
+    fetchers = {
+        "bronze_circuits": fetch_circuits,
+        "bronze_constructors": lambda: fetch_constructors(season),
+        "bronze_driver": lambda: fetch_drivers(season),
+        "bronze_races": lambda: fetch_races(season),
+        "bronze_results": lambda: fetch_results(season),
+        "bronze_sprint_results": lambda: fetch_sprint_results(season),
+        "bronze_qualifyings": lambda: fetch_qualifying(season),
+        "bronze_pit_stops": lambda: fetch_pit_stops(season),
+        "bronze_lap_times": lambda: fetch_lap_times(season),
+    }
 
-    datasets = fetch_race_session(
-        season,
-        round_number
-    )
+    for dataset_type, fetch_func in fetchers.items():
 
-    for dataset_type, raw_df in datasets.items():
+        print(f"\n{'-'*40}")
+        print(f"Dataset: {dataset_type}")
 
-        print(f"\nDataset: {dataset_type}")
-        print(f"Type: {type(raw_df)}")
+        df = fetch_func()
 
-        df = normalize_dataframe(raw_df)
+        df = normalize_dataframe(df)
 
         if df is None:
             print(f"Skipping {dataset_type}")
             continue
-
-        df = filter_columns(df, dataset_type)
 
         df = add_metadata(
             df,
@@ -196,6 +447,8 @@ def main():
             season,
             round_number
         )
+
+        time.sleep(1)
 
     print("\nPipeline completed successfully")
 
